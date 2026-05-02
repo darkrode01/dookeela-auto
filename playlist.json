@@ -1,0 +1,11 @@
+{
+  "name": "Auto Update Playlist",
+  "author": "Gemini Bot",
+  "image": "https://raw.githubusercontent.com/nookkiir5r5-png/-/refs/heads/main/images.jpeg",
+  "groups": [
+    {
+      "name": "Auto Updated Channels",
+      "stations": []
+    }
+  ]
+}
