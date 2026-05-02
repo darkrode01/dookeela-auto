@@ -1,6 +1,7 @@
 import json
 import time
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 CHANNELS = {
@@ -8,30 +9,48 @@ CHANNELS = {
     "Cartoon Network": "https://dookeela4.live/live-tv/cartoon-network"
 }
 
-def get_m3u8(url):
+def get_driver():
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--remote-debugging-port=9222")
 
-    driver = webdriver.Chrome(options=options)
+    # ใช้ chromedriver ที่ติดตั้งใน GitHub Actions
+    service = Service("/usr/bin/chromedriver")
+
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.set_page_load_timeout(30)
+    return driver
+
+
+def get_m3u8(url):
+    driver = get_driver()
 
     try:
+        print("🌐 Open:", url)
         driver.get(url)
+
         time.sleep(8)  # รอ player โหลด
 
         logs = driver.get_log("performance")
 
         for log in logs:
-            message = log["message"]
+            msg = log["message"]
 
-            if ".m3u8" in message:
-                start = message.find("http")
-                end = message.find(".m3u8") + 5
-                return message[start:end]
+            if ".m3u8" in msg:
+                start = msg.find("http")
+                end = msg.find(".m3u8") + 5
+                stream = msg[start:end]
+
+                print("✅ FOUND:", stream)
+                return stream
+
+        print("❌ Not found")
 
     except Exception as e:
-        print("Error:", e)
+        print("🔥 ERROR:", str(e))
 
     finally:
         driver.quit()
@@ -40,7 +59,7 @@ def get_m3u8(url):
 
 
 playlist = {
-    "name": "AUTO GOD PLAYLIST",
+    "name": "GOD PLAYLIST",
     "groups": [
         {
             "name": "LIVE",
@@ -57,6 +76,7 @@ for name, url in CHANNELS.items():
             "name": name,
             "url": stream
         })
+
 
 with open("playlist.json", "w", encoding="utf-8") as f:
     json.dump(playlist, f, ensure_ascii=False, indent=2)
