@@ -1,4 +1,4 @@
-name: Update Playlist
+name: GOD Playlist
 
 permissions:
   contents: write
@@ -17,13 +17,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      - run: pip install requests
+      - name: Install Chrome
+        run: |
+          sudo apt update
+          sudo apt install -y chromium-browser chromium-chromedriver
 
-      - run: python update_playlist.py
+      - name: Install libs
+        run: pip install selenium
 
-      - run: |
+      - name: Run script
+        run: python update_playlist.py
+
+      - name: Push
+        run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add playlist.json
-          git commit -m "update" || echo "no changes"
+          git commit -m "update" || echo "no change"
           git push
