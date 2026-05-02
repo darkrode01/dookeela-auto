@@ -1,64 +1,64 @@
-import requests
-import re
 import json
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-# รายชื่อช่องและ URL หน้าเว็บของ dookeela
 CHANNELS = {
     "True Sport 7": "https://dookeela4.live/live-tv/tsp7",
-    "Animal Show": "https://dookeela4.live/live-tv/animalshow",
-    "สำรวจโลก": "https://dookeela4.live/live-tv/samruilok",
-    "Cartoon Network": "https://dookeela4.live/live-tv/cartoon-network",
-    "Nickelodeon": "https://dookeela4.live/live-tv/nickelodeon"
+    "Cartoon Network": "https://dookeela4.live/live-tv/cartoon-network"
 }
 
-def get_stream_url(url):
+def get_m3u8(url):
+    options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    driver = webdriver.Chrome(options=options)
+
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
+        driver.get(url)
+        time.sleep(8)  # รอ player โหลด
 
-        response = requests.get(url, headers=headers, timeout=10)
+        logs = driver.get_log("performance")
 
-        # ใช้ Regex ค้นหาลิงก์ m3u8
-        match = re.search(r'https?://live[12]\.stream\.liveplayback\.net/[^"\']+', response.text)
+        for log in logs:
+            message = log["message"]
 
-        if match:
-            return match.group(0)
+            if ".m3u8" in message:
+                start = message.find("http")
+                end = message.find(".m3u8") + 5
+                return message[start:end]
 
     except Exception as e:
         print("Error:", e)
 
+    finally:
+        driver.quit()
+
     return None
 
 
-# โครงสร้าง JSON หลัก
 playlist = {
-    "name": "Auto Update Playlist",
-    "author": "Gemini Bot",
-    "image": "https://raw.githubusercontent.com/nookkiir5r5-png/-/refs/heads/main/images.jpeg",
+    "name": "AUTO GOD PLAYLIST",
     "groups": [
         {
-            "name": "Auto Updated Channels",
+            "name": "LIVE",
             "stations": []
         }
     ]
 }
 
-# วนลูปดึง stream
 for name, url in CHANNELS.items():
-    stream_url = get_stream_url(url)
+    stream = get_m3u8(url)
 
-    if stream_url:
+    if stream:
         playlist["groups"][0]["stations"].append({
             "name": name,
-            "url": stream_url,
-            "referer": "https://dookeela4.live/",
-            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "playInNatPlayer": True
+            "url": stream
         })
 
-# บันทึกเป็นไฟล์ JSON
-with open('playlist.json', 'w', encoding='utf-8') as f:
+with open("playlist.json", "w", encoding="utf-8") as f:
     json.dump(playlist, f, ensure_ascii=False, indent=2)
 
-print("✅ สร้าง playlist.json สำเร็จ")
+print("🔥 DONE")
